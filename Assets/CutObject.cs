@@ -34,6 +34,10 @@ public class CutObject : MonoBehaviour
 			newTriangles.Add( vi1 );
 			newTriangles.Add( vi2 );
 		}
+		else if ( pointCount[ti] == 1 )	// only one point is above
+		{
+			
+		}
 		// otherwise, delete it
 	}
 
@@ -52,23 +56,22 @@ public class CutObject : MonoBehaviour
 		int[] triangles = mesh.triangles;
 		int[] pointCount = new int[triangles.Length]; // number of points of a triangle [above, under, 0]
 
-		// get the information from cutting plane
+		// get the information from cutting plane (global)
 		Vector3 n = cutPlane.transform.TransformVector(cutPlane.GetComponent<MeshFilter>().mesh.normals[0]);
 		Vector3 p = cutPlane.transform.position;
+		// convert it to model local. note that the normal vector should keep its length, thus it is converted with Direction
+		n = v.transform.InverseTransformDirection(n);
+		p = v.transform.InverseTransformPoint(p);
 
-		// switch to global coord. and check which side the point is. Set the point as "unmoved"
+		// check which side the point is. Set the point as "unmoved"
+		// calculations are in Model Local
 		for(int i = 0; i < vertices.Length; i++ )
 		{
-			float s;
-			vertices[i] = v.transform.TransformPoint(vertices[i]);
-			s = Vector3.Dot( vertices[i]-p, n);
-			sides[i] = Math.Sign(s);
+			sides[i] = Math.Sign( Vector3.Dot( vertices[i]-p, n) );
 			hasMoved[i] = false;
 		}
 
 		Vector3[] newVertices = vertices.Clone() as Vector3[];
-
-
 		for(int i = 0, cp = 0; i < triangles.Length; )
 		{
 			if( sides[ triangles[i] ] > 0 )
