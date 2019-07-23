@@ -26,7 +26,7 @@ public class CutObject : MonoBehaviour
 		return Vector3.Dot( p0-p1, n ) / Vector3.Dot(p2-p1, n);
 	}
 
-	private void ProcessTriangle(int[] triangles, int ti, int[] pointCount, Vector3[] vertices, int[] sides, bool[] hasMoved, List<int> newTriangles, Vector3 p, Vector3 n)
+	private void ProcessTriangle(int[] triangles, int ti, int[] pointCount, Vector3[] vertices, Vector3 p, Vector3 n, int[] sides, bool[] hasMoved, List<int> newTriangles, Vector3[] newVertices)
 	{
 		int[] vi = new int[5];
 		vi[0] = vi[3] = triangles[ti  ];
@@ -50,7 +50,7 @@ public class CutObject : MonoBehaviour
 			float k;
 			int vb = ((pointCount[ti+2] & 0b100000) != 0) ? 3 : ((pointCount[ti+2] & 0b001000)!= 0) ? 1 : 2 ;
 			k = MoveOntoPlane( vertices[vi[vb-1]], vertices[vi[vb]], p, n);
-			vertices[vi[vb-1]] = k * vertices[vi[vb]] + (1-k) * vertices[vi[vb-1]];
+			newVertices[vi[vb-1]] = k * vertices[vi[vb]] + (1-k) * vertices[vi[vb-1]];
 			k = MoveOntoPlane( vertices[vi[vb+1]], vertices[vi[vb]], p, n);
 			vertices[vi[vb+1]] = k * vertices[vi[vb]] + (1-k) * vertices[vi[vb+1]];
 			newTriangles.Add( vi[vb-1] );
@@ -118,12 +118,12 @@ public class CutObject : MonoBehaviour
 		List<int> newTriangles = new List<int>();
 		for(var i = 0; i < triangles.Length; i+=3)
 		{
-			ProcessTriangle(triangles, i, pointCount, vertices, sides, hasMoved, newTriangles, p, n);
+			ProcessTriangle(triangles, i, pointCount, vertices, p, n, sides, hasMoved, newTriangles, newVertices);
 		}
 
 		// https://stackoverflow.com/questions/1367504/converting-listint-to-int
 		// update the triangle array
 		mesh.triangles = newTriangles.ToArray();
-		mesh.vertices = vertices;
+		mesh.vertices = newVertices;
 	}
 }
