@@ -52,7 +52,7 @@ public class CutObject : MonoBehaviour
 			k = MoveOntoPlane( vertices[vi[vb-1]], vertices[vi[vb]], p, n);
 			newVertices[vi[vb-1]] = k * vertices[vi[vb]] + (1-k) * vertices[vi[vb-1]];
 			k = MoveOntoPlane( vertices[vi[vb+1]], vertices[vi[vb]], p, n);
-			vertices[vi[vb+1]] = k * vertices[vi[vb]] + (1-k) * vertices[vi[vb+1]];
+			newVertices[vi[vb+1]] = k * vertices[vi[vb]] + (1-k) * vertices[vi[vb+1]];
 			newTriangles.Add( vi[vb-1] );
 			newTriangles.Add( vi[vb] );
 			newTriangles.Add( vi[vb+1] );
