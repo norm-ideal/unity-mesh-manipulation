@@ -66,19 +66,7 @@ public class CutObject : MonoBehaviour
 		}
 		else if( hasMovedTo[v2] != v1 )
 		{
-<<<<<<< HEAD
 			Debug.Log("uncovered mesh");
-=======
-			float k;
-			int vb = ((pointCount[ti+2] & 0b100000) != 0) ? 3 : ((pointCount[ti+2] & 0b001000)!= 0) ? 1 : 2 ;
-			k = MoveOntoPlane( vertices[vi[vb-1]], vertices[vi[vb]], p, n);
-			newVertices[vi[vb-1]] = k * vertices[vi[vb]] + (1-k) * vertices[vi[vb-1]];
-			k = MoveOntoPlane( vertices[vi[vb+1]], vertices[vi[vb]], p, n);
-			newVertices[vi[vb+1]] = k * vertices[vi[vb]] + (1-k) * vertices[vi[vb+1]];
-			newTriangles.Add( vi[vb-1] );
-			newTriangles.Add( vi[vb] );
-			newTriangles.Add( vi[vb+1] );
->>>>>>> 9acc3cf06b5135d9c4cc45d9d13e125bf56936f5
 		}
 		newTriangles.Add( v0 );
 		newTriangles.Add( v1 );
