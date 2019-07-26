@@ -33,7 +33,7 @@ public class CutObject : MonoBehaviour
 		newTriangles.Add(triangles[start++]);
 	}
 
-	private void ProcessTriangleB1(int[] triangles, int ti, int[] pointCount, Vector3[] vertices, Vector3 p, Vector3 n, int[] sides, int[] hasMovedTo, List<int> newTriangles, List<Vector3> newVertices)
+	private void ProcessTriangleB1(int[] triangles, int ti, int[] pointCount, Vector3[] vertices, Vector3 p, Vector3 n, int[] sides, int[] hasMovedTo, List<int> newTriangles, List<Vector3> newVertices, List<Vector3> newNormals)
 	{
 		int[] vi = new int[5];
 		vi[0] = vi[3] = triangles[ti  ];
@@ -51,27 +51,29 @@ public class CutObject : MonoBehaviour
 		if( hasMovedTo[v0] == -1) // v0 has not been moved
 		{
 			k = MoveOntoPlane( vertices[v0], vertices[v1], p, n);
-			newVertices[v0] = k * vertices[v1] + (1-k) * vertices[v0];
+			newVertices[v0] = Vector3.Lerp(vertices[v0], vertices[v1], k);
 			hasMovedTo[v0] = v1;
 		}
 		else if( hasMovedTo[v0] != v1 ) // v0 has not been moved to v1, should create a new point and a new triangle
 		{
 			k = MoveOntoPlane( vertices[v0], vertices[v1], p, n);
-			newVertices.Add( k * vertices[v1] + (1-k) * vertices[v0] );
+			newVertices.Add( Vector3.Lerp(vertices[v0], vertices[v1], k) );
 			v0 = newVertices.Count-1;
+			Debug.Log("new vertex");
 		}
 
 		if( hasMovedTo[v2] == -1)
 		{
 			k = MoveOntoPlane( vertices[v2], vertices[v1], p, n);
-			newVertices[v2] = k * vertices[v1] + (1-k) * vertices[v2];
+			newVertices[v2] = Vector3.Lerp(vertices[v2], vertices[v1], k);
 			hasMovedTo[v2] = v1;
 		}
 		else if( hasMovedTo[v2] != v1 ) // v2 has not been moved to v1, should create a new point and a new triangle
 		{
 			k = MoveOntoPlane( vertices[v2], vertices[v1], p, n);
-			newVertices.Add( k * vertices[v1] + (1-k) * vertices[v2] );
+			newVertices.Add( Vector3.Lerp(vertices[v2], vertices[v1], k) );
 			v2 = newVertices.Count-1;
+			Debug.Log("new vertex");
 		}
 
 		newTriangles.Add( v0 );
@@ -79,8 +81,8 @@ public class CutObject : MonoBehaviour
 		newTriangles.Add( v2 );
 	}
 
-/*
-	private void ProcessTriangleB2(int[] triangles, int ti, int[] pointCount, Vector3[] vertices, Vector3 p, Vector3 n, int[] sides, int[] hasMovedTo, List<int> newTriangles, List<Vector3> newVertices)
+
+	private void ProcessTriangleB2(int[] triangles, int ti, int[] pointCount, Vector3[] vertices, Vector3 p, Vector3 n, int[] sides, int[] hasMovedTo, List<int> newTriangles, List<Vector3> newVertices, List<Vector3> newNormals)
 	{
 		int[] vi = new int[5];
 		vi[0] = vi[3] = triangles[ti  ];
@@ -95,38 +97,42 @@ public class CutObject : MonoBehaviour
 		v1 = vi[vb];	// upper point
 		v2 = vi[vb+1];
 
-		if( hasMovedTo[v1] == -1 )		// v1 has not been moved
+		int v0n, v2n;	// two points where v1 moved toward v0 and v2, accordingly
+		v0n = v2n = -1;
+
+		// if the point is moved toward v0 or v2, reuse it. Do not create.
+		if( hasMovedTo[v1] == v0 )
+			v0n = v1;
+		else if ( hasMovedTo[v1] == v2 )
+			v2n = v1;
+
+		// if v1 has not been moved toward v0, create it and store the index in v0n
+		if( v0n == -1 )
 		{
 			k = MoveOntoPlane( vertices[v1], vertices[v0], p, n);
-			newVertices[v1] = k * vertices[v0] + (1-k) * vertices[v1];
-			hasMovedTo[v1] = v0;
+			newVertices.Add( Vector3.Lerp(vertices[v1], vertices[v0], k) );
+			v0n = newVertices.Count - 1;
+			Debug.Log("new vertex");
+		}
 
-
-
+		// v1 has not been moved toward v2, create it and store the index in v2n
+		if( v2n == -1 )
+		{
 			k = MoveOntoPlane( vertices[v1], vertices[v2], p, n);
-			newVertices.Add(k * vertices[v2] + (1-k) * vertices[v1]);
-
-		}
-		else if( hasMovedTo[v1] == v0 )	// v1 has been moved toward v0
-		{
-			k = MoveOntoPlane( vertices[v1], vertices[v0], p, n);
-			Vector3 newPoint =
-			Debug.Log("Already Moved");
-		}
-		else if( hasMovedTo[v1] == v2 )	// v1 has been moved toward v2
-		{
-			Debug.Log("Already Moved");
-		}
-		else							// v1 has been moved toward unknown point
-		{
-			Debug.Log("Uncovered Mesh");
+			newVertices.Add( Vector3.Lerp(vertices[v1], vertices[v2], k) );
+			v2n = newVertices.Count - 1;
+			Debug.Log("new vertex");
 		}
 
 		newTriangles.Add( v0 );
-		newTriangles.Add( v1 );
+		newTriangles.Add( v2n );
 		newTriangles.Add( v2 );
+
+		newTriangles.Add( v0 );
+		newTriangles.Add( v0n );
+		newTriangles.Add( v2n );
+		Debug.Log("new triangle");
 	}
-*/
 
 // https://docs.unity3d.com/ScriptReference/Mesh.html
 // Cuts the victim GameObject v with the cutting plane cutPlane,
@@ -159,7 +165,10 @@ public class CutObject : MonoBehaviour
 		}
 
 		List<Vector3> newVertices = new List<Vector3>();
+		List<Vector3> newNormals = new List<Vector3>();
 		newVertices.AddRange(vertices);
+		newNormals.AddRange(normals);
+
 		for(int i = 0, cp = 0, code = 0; i < triangles.Length; )
 		{
 			if( sides[ triangles[i] ] > 0 )
@@ -187,23 +196,23 @@ public class CutObject : MonoBehaviour
 		List<int> newTriangles = new List<int>();
 		for(var i = 0; i < triangles.Length; i+=3)
 		{
-			if(pointCount[i] == 0 || pointCount[i+1] == 2 )
+			if(pointCount[i] == 0 )
 				AddTriangle(triangles, i, newTriangles);
 			// process the triangle with one point below the plane.
 			else if(pointCount[i+1] == 1)
-				ProcessTriangleB1(triangles, i, pointCount, vertices, p, n, sides, hasMovedTo, newTriangles, newVertices);
+				ProcessTriangleB1(triangles, i, pointCount, vertices, p, n, sides, hasMovedTo, newTriangles, newVertices, newNormals);
 		}
 
-/*
 		for(var i = 0; i < triangles.Length; i+=3)
 		{
 			if(pointCount[i+1] == 2)
-				ProcessTriangleB2(triangles, i, pointCount, vertices, p, n, sides, hasMovedTo, newTriangles, newVertices);
+				ProcessTriangleB2(triangles, i, pointCount, vertices, p, n, sides, hasMovedTo, newTriangles, newVertices, newNormals);
 		}
-*/
+
 		// https://stackoverflow.com/questions/1367504/converting-listint-to-int
 		// update the triangle array
 		mesh.vertices = newVertices.ToArray();
+		mesh.normals = newNormals.ToArray();
 		mesh.triangles = newTriangles.ToArray();
 	}
 }
