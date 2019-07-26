@@ -15,3 +15,7 @@ This is a repository for testing unity Mesh features. It includes the direct acc
 
 Black triangles are newly created ones.
 ![adding triangles](documents/two_point_below.png)
+
+![normals](documents/normals.png)
+
+
