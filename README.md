@@ -13,4 +13,5 @@ This is a repository for testing unity Mesh features. It includes the direct acc
   * if it is already moved to other direction, create a new point
   * move one triangle and create one triangle
 
+Black triangles are newly created ones.
 ![adding triangles](documents/two_point_below.png)
