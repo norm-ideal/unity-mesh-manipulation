@@ -59,7 +59,6 @@ public class CutObject : MonoBehaviour
 			k = MoveOntoPlane( vertices[v0], vertices[v1], p, n);
 			newVertices.Add( k * vertices[v1] + (1-k) * vertices[v0] );
 			v0 = newVertices.Count-1;
-			Debug.Log("created " + v0);
 		}
 
 		if( hasMovedTo[v2] == -1)
@@ -73,7 +72,6 @@ public class CutObject : MonoBehaviour
 			k = MoveOntoPlane( vertices[v2], vertices[v1], p, n);
 			newVertices.Add( k * vertices[v1] + (1-k) * vertices[v2] );
 			v2 = newVertices.Count-1;
-			Debug.Log("created " + v2);
 		}
 
 		newTriangles.Add( v0 );
