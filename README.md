@@ -8,8 +8,6 @@ This is a repository for testing unity Mesh features. It includes the direct acc
 * If only one vertices are below the plane, move other two vertices onto the plane
 * If either or both of two vertices has already been moved toward another point, create new point(s) and a new triangle
 
-![before the cut](documents/before.png)
-
-![after the cut](documents/move_vertex.png)
+Black triangles are newly created ones.
 
 ![adding triangles](documents/addition_b1.png)
