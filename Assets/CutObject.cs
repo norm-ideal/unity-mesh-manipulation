@@ -110,8 +110,14 @@ public class CutObject : MonoBehaviour
 		else if ( hasMovedTo[v1] == v2 )
 			v2n = v1;
 
-		// if v1 has not been moved toward v0, create it and store the index in v0n
-		if( v0n == -1 )
+		if (hasMovedTo[v1] == -1)
+		{
+		 	k = MoveOntoPlane(vertices[v1], vertices[v0], p, n);
+			newVertices[v1] = Vector3.Lerp(vertices[v1], vertices[v0], k);
+			newNormals[v1] = Vector3.Lerp(normals[v1], normals[v0], k);
+			hasMovedTo[v1] = v0;
+		}
+		else if ( v0n == -1 )// v1 has not been moved toward v0, create it and store the index in v0n
 		{
 			k = MoveOntoPlane( vertices[v1], vertices[v0], p, n);
 			newVertices.Add( Vector3.Lerp(vertices[v1], vertices[v0], k) );
@@ -120,8 +126,14 @@ public class CutObject : MonoBehaviour
 			Debug.Log("new vertex");
 		}
 
-		// v1 has not been moved toward v2, create it and store the index in v2n
-		if( v2n == -1 )
+		if (hasMovedTo[v1] == -1)
+		{
+			k = MoveOntoPlane(vertices[v1], vertices[v2], p, n);
+			newVertices[v1] = Vector3.Lerp(vertices[v1], vertices[v2], k);
+			newNormals[v1] = Vector3.Lerp(normals[v1], normals[v2], k);
+			hasMovedTo[v1] = v2;
+		}
+		else if ( v2n == -1 )// v1 has not been moved toward v2, create it and store the index in v2n
 		{
 			k = MoveOntoPlane( vertices[v1], vertices[v2], p, n);
 			newVertices.Add( Vector3.Lerp(vertices[v1], vertices[v2], k) );
