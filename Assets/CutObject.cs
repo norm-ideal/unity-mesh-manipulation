@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
@@ -15,10 +15,10 @@ public class CutObject : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-		if( Input.GetKeyDown("space") )
-		{
-			Cut(gameObject, cutPlane);
-		}
+        if (Input.GetKeyDown("space"))
+        {
+            Cut(gameObject, cutPlane);
+        }        
     }
 
     private float MoveOntoPlane(Vector3 p1, Vector3 p2, Vector3 p0, Vector3 n)
@@ -33,7 +33,7 @@ public class CutObject : MonoBehaviour
 		newTriangles.Add(triangles[start++]);
 	}
 
-	private void ProcessTriangleB1(int[] triangles, int ti, int[] pointCount, Vector3[] vertices, Vector3[] normals, Vector3 p, Vector3 n, int[] sides, int[] hasMovedTo, List<int> newTriangles, List<Vector3> newVertices, List<Vector3> newNormals)
+	private void ProcessTriangleB1(int[] triangles, int ti, int[] pointCount, Vector3[] vertices, Vector3[] normals, Vector3 p, Vector3 n, int[] sides, int[] hasMovedTo, List<int> newTriangles, List<Vector3> newVertices, List<Vector3> newNormals,int[] rightIndex)
 	{
 		int[] vi = new int[5];
 		vi[0] = vi[3] = triangles[ti  ];
@@ -47,7 +47,7 @@ public class CutObject : MonoBehaviour
 		v0 = vi[vb-1];
 		v1 = vi[vb];	// lower point
 		v2 = vi[vb+1];
-
+        
 		if( hasMovedTo[v0] == -1) // v0 has not been moved
 		{
 			k = MoveOntoPlane( vertices[v0], vertices[v1], p, n);
@@ -83,10 +83,11 @@ public class CutObject : MonoBehaviour
 		newTriangles.Add( v0 );
 		newTriangles.Add( v1 );
 		newTriangles.Add( v2 );
+        rightIndex[v0] = v2;
 	}
 
 
-	private void ProcessTriangleB2(int[] triangles, int ti, int[] pointCount, Vector3[] vertices, Vector3[] normals, Vector3 p, Vector3 n, int[] sides, int[] hasMovedTo, List<int> newTriangles, List<Vector3> newVertices, List<Vector3> newNormals)
+	private void ProcessTriangleB2(int[] triangles, int ti, int[] pointCount, Vector3[] vertices, Vector3[] normals, Vector3 p, Vector3 n, int[] sides, int[] hasMovedTo, List<int> newTriangles, List<Vector3> newVertices, List<Vector3> newNormals, int[] rightIndex)
 	{
 		int[] vi = new int[5];
 		vi[0] = vi[3] = triangles[ti  ];
@@ -109,9 +110,15 @@ public class CutObject : MonoBehaviour
 			v0n = v1;
 		else if ( hasMovedTo[v1] == v2 )
 			v2n = v1;
-
-		// if v1 has not been moved toward v0, create it and store the index in v0n
-		if( v0n == -1 )
+        
+        if (hasMovedTo[v1] == -1)
+        {
+            k = MoveOntoPlane(vertices[v1], vertices[v0], p, n);
+            newVertices[v1] = Vector3.Lerp(vertices[v1], vertices[v0], k);
+            newNormals[v1] = Vector3.Lerp(normals[v1], normals[v0], k);
+            hasMovedTo[v1] = v0;
+        }
+        else if ( v0n == -1 )// v1 has not been moved toward v0, create it and store the index in v0n
 		{
 			k = MoveOntoPlane( vertices[v1], vertices[v0], p, n);
 			newVertices.Add( Vector3.Lerp(vertices[v1], vertices[v0], k) );
@@ -120,8 +127,14 @@ public class CutObject : MonoBehaviour
 			Debug.Log("new vertex");
 		}
 
-		// v1 has not been moved toward v2, create it and store the index in v2n
-		if( v2n == -1 )
+        if (hasMovedTo[v1] == -1)
+        {
+            k = MoveOntoPlane(vertices[v1], vertices[v2], p, n);
+            newVertices[v1] = Vector3.Lerp(vertices[v1], vertices[v2], k);
+            newNormals[v1] = Vector3.Lerp(normals[v1], normals[v2], k);
+            hasMovedTo[v1] = v2;
+        }
+        else if ( v2n == -1 )// v1 has not been moved toward v2, create it and store the index in v2n
 		{
 			k = MoveOntoPlane( vertices[v1], vertices[v2], p, n);
 			newVertices.Add( Vector3.Lerp(vertices[v1], vertices[v2], k) );
@@ -129,7 +142,7 @@ public class CutObject : MonoBehaviour
 			v2n = newVertices.Count - 1;
 			Debug.Log("new vertex");
 		}
-
+        
 		newTriangles.Add( v0 );
 		newTriangles.Add( v2n );
 		newTriangles.Add( v2 );
@@ -137,6 +150,7 @@ public class CutObject : MonoBehaviour
 		newTriangles.Add( v0 );
 		newTriangles.Add( v0n );
 		newTriangles.Add( v2n );
+        rightIndex[v2n] = v0n;
 		Debug.Log("new triangle");
 	}
 
@@ -199,25 +213,57 @@ public class CutObject : MonoBehaviour
 			}
 		}
 
-		List<int> newTriangles = new List<int>();
+        int[] rightIndex = new int[vertices.Length * 3 / 2];
+        for (int i = 0; i < rightIndex.Length; i++)
+            rightIndex[i] = -1;
+
+        List<int> newTriangles = new List<int>();
 		for(var i = 0; i < triangles.Length; i+=3)
 		{
 			if(pointCount[i] == 0 )
 				AddTriangle(triangles, i, newTriangles);
 			// process the triangle with one point below the plane.
 			else if(pointCount[i+1] == 1)
-				ProcessTriangleB1(triangles, i, pointCount, vertices, normals, p, n, sides, hasMovedTo, newTriangles, newVertices, newNormals);
+				ProcessTriangleB1(triangles, i, pointCount, vertices, normals, p, n, sides, hasMovedTo, newTriangles, newVertices, newNormals,rightIndex);
 		}
 
 		for(var i = 0; i < triangles.Length; i+=3)
 		{
 			if(pointCount[i+1] == 2)
-				ProcessTriangleB2(triangles, i, pointCount, vertices, normals, p, n, sides, hasMovedTo, newTriangles, newVertices, newNormals);
+				ProcessTriangleB2(triangles, i, pointCount, vertices, normals, p, n, sides, hasMovedTo, newTriangles, newVertices, newNormals,rightIndex);
 		}
 
-		// https://stackoverflow.com/questions/1367504/converting-listint-to-int
-		// update the triangle array
-		mesh.vertices = newVertices.ToArray();
+        int futa1, futa2, futa3;
+
+        for(int i = 0; i < rightIndex.Length; i++)
+        {
+            if (rightIndex[i] != -1)
+            {
+                futa1 = i;
+                futa2 = rightIndex[futa1];
+                futa3 = rightIndex[futa2];
+
+                while (futa1 != futa3 && futa3 != -1) 
+                {
+                    Debug.Log(futa1);
+                    Debug.Log(futa2);
+                    Debug.Log(futa3);
+                    Debug.Log(newTriangles.Count);
+                    Debug.Log("---");
+
+                    newTriangles.Add(futa1);
+                    newTriangles.Add(futa2);
+                    newTriangles.Add(futa3);
+                    futa2 = futa3;
+                    futa3 = rightIndex[futa2];
+                }
+
+//                break;
+            }
+        }
+        // https://stackoverflow.com/questions/1367504/converting-listint-to-int
+        // update the triangle array
+        mesh.vertices = newVertices.ToArray();
 		mesh.normals = newNormals.ToArray();
 		mesh.triangles = newTriangles.ToArray();
 	}
