@@ -109,29 +109,24 @@ public class CutObject : MonoBehaviour
 		else if ( hasMovedTo[v1] == v2 )
 			v2n = v1;
 
+		// if the point is not moved, move it and call it v0n
         if (hasMovedTo[v1] == -1)
         {
             k = MoveOntoPlane(vertices[v1], vertices[v0], p, n);
             newVertices[v1] = Vector3.Lerp(vertices[v1], vertices[v0], k);
             newNormals[v1] = Vector3.Lerp(normals[v1], normals[v0], k);
             hasMovedTo[v1] = v0;
+			v0n = v1;
         }
-        else if ( v0n == -1 )// v1 has not been moved toward v0, create it and store the index in v0n
+
+		if ( v0n == -1 )// v1 has not been moved toward v0, create it and store the index in v0n
 		{
 			k = MoveOntoPlane( vertices[v1], vertices[v0], p, n);
 			newVertices.Add( Vector3.Lerp(vertices[v1], vertices[v0], k) );
 			newNormals.Add( Vector3.Lerp(normals[v1], normals[v0], k) );
 			v0n = newVertices.Count - 1;
 		}
-
-        if (hasMovedTo[v1] == -1)
-        {
-            k = MoveOntoPlane(vertices[v1], vertices[v2], p, n);
-            newVertices[v1] = Vector3.Lerp(vertices[v1], vertices[v2], k);
-            newNormals[v1] = Vector3.Lerp(normals[v1], normals[v2], k);
-            hasMovedTo[v1] = v2;
-        }
-        else if ( v2n == -1 )// v1 has not been moved toward v2, create it and store the index in v2n
+        if ( v2n == -1 )// v1 has not been moved toward v2, create it and store the index in v2n
 		{
 			k = MoveOntoPlane( vertices[v1], vertices[v2], p, n);
 			newVertices.Add( Vector3.Lerp(vertices[v1], vertices[v2], k) );
@@ -208,7 +203,7 @@ public class CutObject : MonoBehaviour
 			}
 		}
 
-        int[] rightIndex = new int[vertices.Length * 3 / 2];
+        int[] rightIndex = new int[vertices.Length * 2];
         for (int i = 0; i < rightIndex.Length; i++)
             rightIndex[i] = -1;
 
@@ -231,7 +226,7 @@ public class CutObject : MonoBehaviour
         int futa1, futa2, futa3;
 
 		futa1 = -1;
-        for(int i = 0; i < rightIndex.Length; i++)
+        for(int i = 0; i < newVertices.Count; i++)
         {
             if (rightIndex[i] != -1)
             {
@@ -243,7 +238,7 @@ public class CutObject : MonoBehaviour
 				else
 				{
 					futa2 = i;
-					futa3 = rightIndex[futa2];
+					futa3 = rightIndex[i];
 
 					if( futa3 == -1 )
 						continue;
@@ -260,6 +255,10 @@ public class CutObject : MonoBehaviour
         }
         // https://stackoverflow.com/questions/1367504/converting-listint-to-int
         // update the triangle array
+		foreach(int i in newTriangles)
+			if( i<0 || i>=newTriangles.Count)
+				Debug.Log("ERROR "+i);
+
 		mesh.Clear();
         mesh.vertices = newVertices.ToArray();
 		mesh.normals = newNormals.ToArray();
