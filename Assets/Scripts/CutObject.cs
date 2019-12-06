@@ -264,6 +264,6 @@ public class CutObject : MonoBehaviour
         mesh.vertices = newVertices.ToArray();
 		mesh.normals = newNormals.ToArray();
 		mesh.triangles = newTriangles.ToArray();
-		mesh.RecalculateNormals();
+//		mesh.RecalculateNormals();
 	}
 }
