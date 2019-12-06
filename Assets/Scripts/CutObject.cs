@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
@@ -18,7 +18,7 @@ public class CutObject : MonoBehaviour
         if (Input.GetKeyDown("space"))
         {
             Cut(gameObject, cutPlane);
-        }        
+        }
     }
 
     private float MoveOntoPlane(Vector3 p1, Vector3 p2, Vector3 p0, Vector3 n)
@@ -47,7 +47,7 @@ public class CutObject : MonoBehaviour
 		v0 = vi[vb-1];
 		v1 = vi[vb];	// lower point
 		v2 = vi[vb+1];
-        
+
 		if( hasMovedTo[v0] == -1) // v0 has not been moved
 		{
 			k = MoveOntoPlane( vertices[v0], vertices[v1], p, n);
@@ -61,7 +61,6 @@ public class CutObject : MonoBehaviour
 			newVertices.Add( Vector3.Lerp(vertices[v0], vertices[v1], k) );
 			newNormals.Add( Vector3.Lerp(normals[v0], normals[v1], k) );
 			v0 = newVertices.Count-1;
-			Debug.Log("new vertex");
 		}
 
 		if( hasMovedTo[v2] == -1)
@@ -77,7 +76,6 @@ public class CutObject : MonoBehaviour
 			newVertices.Add( Vector3.Lerp(vertices[v2], vertices[v1], k) );
 			newNormals.Add( Vector3.Lerp(normals[v2], normals[v1], k) );
 			v2 = newVertices.Count-1;
-			Debug.Log("new vertex");
 		}
 
 		newTriangles.Add( v0 );
@@ -110,7 +108,7 @@ public class CutObject : MonoBehaviour
 			v0n = v1;
 		else if ( hasMovedTo[v1] == v2 )
 			v2n = v1;
-        
+
         if (hasMovedTo[v1] == -1)
         {
             k = MoveOntoPlane(vertices[v1], vertices[v0], p, n);
@@ -124,7 +122,6 @@ public class CutObject : MonoBehaviour
 			newVertices.Add( Vector3.Lerp(vertices[v1], vertices[v0], k) );
 			newNormals.Add( Vector3.Lerp(normals[v1], normals[v0], k) );
 			v0n = newVertices.Count - 1;
-			Debug.Log("new vertex");
 		}
 
         if (hasMovedTo[v1] == -1)
@@ -140,9 +137,8 @@ public class CutObject : MonoBehaviour
 			newVertices.Add( Vector3.Lerp(vertices[v1], vertices[v2], k) );
 			newNormals.Add( Vector3.Lerp(normals[v1], normals[v2], k) );
 			v2n = newVertices.Count - 1;
-			Debug.Log("new vertex");
 		}
-        
+
 		newTriangles.Add( v0 );
 		newTriangles.Add( v2n );
 		newTriangles.Add( v2 );
@@ -151,7 +147,6 @@ public class CutObject : MonoBehaviour
 		newTriangles.Add( v0n );
 		newTriangles.Add( v2n );
         rightIndex[v2n] = v0n;
-		Debug.Log("new triangle");
 	}
 
 // https://docs.unity3d.com/ScriptReference/Mesh.html
@@ -235,41 +230,40 @@ public class CutObject : MonoBehaviour
 
         int futa1, futa2, futa3;
 
+		futa1 = -1;
         for(int i = 0; i < rightIndex.Length; i++)
         {
             if (rightIndex[i] != -1)
             {
-                futa1 = i;
-                futa2 = rightIndex[futa1];
-                futa3 = rightIndex[futa2];
+				if( futa1 == -1 )
+				{
+					futa1 = i;
+					continue;
+				}
+				else
+				{
+					futa2 = i;
+					futa3 = rightIndex[futa2];
 
-                while (futa1 != futa3 && futa3 != -1) 
-                {
-                    Debug.Log(futa1);
-                    Debug.Log(futa2);
-                    Debug.Log(futa3);
-                    Debug.Log(newTriangles.Count);
+					if( futa3 == -1 )
+						continue;
+
+                    newTriangles.Add(futa1);
+                    newTriangles.Add(futa2);
+                    newTriangles.Add(futa3);
+
+					Debug.Log(futa1 + " - " + futa2 + " - " + futa3);
+					Debug.Log(newTriangles.Count);
                     Debug.Log("---");
-
-                    newTriangles.Add(futa1);
-                    newTriangles.Add(futa2);
-                    newTriangles.Add(futa3);
-
-                    newTriangles.Add(futa1);
-                    newTriangles.Add(futa3);
-                    newTriangles.Add(futa2);
-
-                    futa2 = futa3;
-                    futa3 = rightIndex[futa2];
-                }
-
-//                break;
+				}
             }
         }
         // https://stackoverflow.com/questions/1367504/converting-listint-to-int
         // update the triangle array
+		mesh.Clear();
         mesh.vertices = newVertices.ToArray();
 		mesh.normals = newNormals.ToArray();
 		mesh.triangles = newTriangles.ToArray();
+		mesh.RecalculateNormals();
 	}
 }
