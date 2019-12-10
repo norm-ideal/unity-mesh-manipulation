@@ -6,7 +6,9 @@ using System;
 public class CutObject : MonoBehaviour
 {
 	public GameObject cutPlane;
-    // Start is called before the first frame update
+
+	int[] edges;
+	// Start is called before the first frame update
     void Start()
     {
 
@@ -170,10 +172,10 @@ public class CutObject : MonoBehaviour
 			hasMovedTo[i] = -1;
 		}
 
-		List<Vector3> newVertices = new List<Vector3>();
-		List<Vector3> newNormals = new List<Vector3>();
-		newVertices.AddRange(vertices);
-		newNormals.AddRange(normals);
+		List<Vector3> newVertices = new List<Vector3>(vertices);
+		List<Vector3> newNormals = new List<Vector3>(normals);
+
+		edges = new int[ vertices.Length * 2 ] {-1};	// two times the count would be enough
 
 		for(int i = 0, cp = 0, code = 0; i < triangles.Length; )
 		{
@@ -220,5 +222,7 @@ public class CutObject : MonoBehaviour
 		mesh.vertices = newVertices.ToArray();
 		mesh.normals = newNormals.ToArray();
 		mesh.triangles = newTriangles.ToArray();
+
+		delete(edges);
 	}
 }
