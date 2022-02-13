@@ -23,11 +23,13 @@ public class CutObject : MonoBehaviour
 		}
 	}
 
+	// p1->p2 直線と p0 を通る法線 n の平面との交点 q = p1 + t(p2-p1) を与える t を返す
 	private float MoveOntoPlane(Vector3 p1, Vector3 p2, Vector3 p0, Vector3 n)
 	{
 		return Vector3.Dot( p0-p1, n ) / Vector3.Dot(p2-p1, n);
 	}
 
+	// 現在の頂点リスト triangles の start 番目から３つ取り出して、三角メッシュリスト newTriangles に追加する
 	private void AddTriangle(int[] triangles, int start, List<int> newTriangles)
 	{
 		newTriangles.Add(triangles[start++]);
@@ -35,6 +37,16 @@ public class CutObject : MonoBehaviour
 		newTriangles.Add(triangles[start++]);
 	}
 
+	// 平面の下側に１点、上側に２点あるような三角形を切断し、新しいメッシュを作成する
+	// triangles : ３頂点インデックスリスト（３点で１メッシュ）
+	// ti : 対象となる開始頂点（ここから３個のインデックスを取り出す）
+	// pointcount : ３個１セットのデータで、「平面の上側の頂点数」「下側の頂点数」「それぞれの点の上下を表す 6 bit コード」
+	// vertices, normals : 頂点データリスト
+	// p, n : 切断平面
+	// sides : 各頂点が平面のどちら側にあるか（どうやら使っていない）
+	// hasMovedTo : 頂点インデックスがすでに切断によって移動されている場合の移動先頂点インデックス。すでに移動されているなら、新しく頂点を生成せず、移動先の頂点を参照する。
+	// newVertices, newNormals : 新しく生成される頂点の情報
+	// rightIndex : 「自分の右側の頂点」を表す頂点インデックスリスト。切断によって生成された頂点から「蓋」を作るために使う。
 	private void ProcessTriangleB1(int[] triangles, int ti, int[] pointCount, Vector3[] vertices, Vector3[] normals, Vector3 p, Vector3 n, int[] sides, int[] hasMovedTo, List<int> newTriangles, List<Vector3> newVertices, List<Vector3> newNormals,int[] rightIndex)
 	{
 		int[] vi = new int[5];
@@ -86,7 +98,7 @@ public class CutObject : MonoBehaviour
 		rightIndex[v0] = v2;
 	}
 
-
+	// 平面の下に２個点があるような三角形の切断
 	private void ProcessTriangleB2(int[] triangles, int ti, int[] pointCount, Vector3[] vertices, Vector3[] normals, Vector3 p, Vector3 n, int[] sides, int[] hasMovedTo, List<int> newTriangles, List<Vector3> newVertices, List<Vector3> newNormals, int[] rightIndex)
 	{
 		int[] vi = new int[5];
@@ -180,6 +192,8 @@ public class CutObject : MonoBehaviour
 		List<Vector3> newNormals = new List<Vector3>(normals);
 
 		edges = new int[ vertices.Length * 2 ];	// two times the count would be enough
+		for(int i=0; i<edges.Length; i++)
+			edges[i] = -1;
 
 		for(int i = 0, cp = 0, code = 0; i < triangles.Length; )
 		{
@@ -207,22 +221,22 @@ public class CutObject : MonoBehaviour
 
 		int[] rightIndex = new int[vertices.Length * 2];
 		for (int i = 0; i < rightIndex.Length; i++)
-		rightIndex[i] = -1;
+			rightIndex[i] = -1;
 
 		List<int> newTriangles = new List<int>();
 		for(var i = 0; i < triangles.Length; i+=3)
 		{
 			if(pointCount[i] == 0 )
-			AddTriangle(triangles, i, newTriangles);
-			// process the triangle with one point below the plane.
+				AddTriangle(triangles, i, newTriangles);
+				// process the triangle with one point below the plane.
 			else if(pointCount[i+1] == 1)
-			ProcessTriangleB1(triangles, i, pointCount, vertices, normals, p, n, sides, hasMovedTo, newTriangles, newVertices, newNormals,rightIndex);
+				ProcessTriangleB1(triangles, i, pointCount, vertices, normals, p, n, sides, hasMovedTo, newTriangles, newVertices, newNormals,rightIndex);
 		}
 
 		for(var i = 0; i < triangles.Length; i+=3)
 		{
 			if(pointCount[i+1] == 2)
-			ProcessTriangleB2(triangles, i, pointCount, vertices, normals, p, n, sides, hasMovedTo, newTriangles, newVertices, newNormals,rightIndex);
+				ProcessTriangleB2(triangles, i, pointCount, vertices, normals, p, n, sides, hasMovedTo, newTriangles, newVertices, newNormals,rightIndex);
 		}
 
 		int futa1, futa2, futa3;
@@ -266,6 +280,7 @@ public class CutObject : MonoBehaviour
 		mesh.normals = newNormals.ToArray();
 		mesh.triangles = newTriangles.ToArray();
 
+		cutPlane.SetActive(false);
 		// delete(edges); なんと C# では delete しなくてもそのうち返却してくれるらしい
 	}
 }
