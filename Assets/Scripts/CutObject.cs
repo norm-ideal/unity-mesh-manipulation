@@ -9,21 +9,21 @@ public class CutObject : MonoBehaviour
 
 	int[] edges;
 	// Start is called before the first frame update
-    void Start()
-    {
+	void Start()
+	{
 
-    }
+	}
 
-    // Update is called once per frame
-    void Update()
-    {
-        if (Input.GetKeyDown("space"))
-        {
-            Cut(gameObject, cutPlane);
-        }
-    }
+	// Update is called once per frame
+	void Update()
+	{
+		if (Input.GetKeyDown("space"))
+		{
+		    Cut(gameObject, cutPlane);
+		}
+	}
 
-    private float MoveOntoPlane(Vector3 p1, Vector3 p2, Vector3 p0, Vector3 n)
+	private float MoveOntoPlane(Vector3 p1, Vector3 p2, Vector3 p0, Vector3 n)
 	{
 		return Vector3.Dot( p0-p1, n ) / Vector3.Dot(p2-p1, n);
 	}
@@ -83,7 +83,7 @@ public class CutObject : MonoBehaviour
 		newTriangles.Add( v0 );
 		newTriangles.Add( v1 );
 		newTriangles.Add( v2 );
-        rightIndex[v0] = v2;
+		rightIndex[v0] = v2;
 	}
 
 
@@ -107,19 +107,19 @@ public class CutObject : MonoBehaviour
 
 		// if the point is moved toward v0 or v2, reuse it. Do not create.
 		if( hasMovedTo[v1] == v0 )
-			v0n = v1;
+		v0n = v1;
 		else if ( hasMovedTo[v1] == v2 )
-			v2n = v1;
+		v2n = v1;
 
 		// if the point is not moved, move it and call it v0n
-        if (hasMovedTo[v1] == -1)
-        {
-            k = MoveOntoPlane(vertices[v1], vertices[v0], p, n);
-            newVertices[v1] = Vector3.Lerp(vertices[v1], vertices[v0], k);
-            newNormals[v1] = Vector3.Lerp(normals[v1], normals[v0], k);
-            hasMovedTo[v1] = v0;
+		if (hasMovedTo[v1] == -1)
+		{
+			k = MoveOntoPlane(vertices[v1], vertices[v0], p, n);
+			newVertices[v1] = Vector3.Lerp(vertices[v1], vertices[v0], k);
+			newNormals[v1] = Vector3.Lerp(normals[v1], normals[v0], k);
+			hasMovedTo[v1] = v0;
 			v0n = v1;
-        }
+		}
 
 		if ( v0n == -1 )// v1 has not been moved toward v0, create it and store the index in v0n
 		{
@@ -128,7 +128,7 @@ public class CutObject : MonoBehaviour
 			newNormals.Add( Vector3.Lerp(normals[v1], normals[v0], k) );
 			v0n = newVertices.Count - 1;
 		}
-        if ( v2n == -1 )// v1 has not been moved toward v2, create it and store the index in v2n
+		if ( v2n == -1 )// v1 has not been moved toward v2, create it and store the index in v2n
 		{
 			k = MoveOntoPlane( vertices[v1], vertices[v2], p, n);
 			newVertices.Add( Vector3.Lerp(vertices[v1], vertices[v2], k) );
@@ -143,12 +143,12 @@ public class CutObject : MonoBehaviour
 		newTriangles.Add( v0 );
 		newTriangles.Add( v0n );
 		newTriangles.Add( v2n );
-        rightIndex[v2n] = v0n;
+		rightIndex[v2n] = v0n;
 	}
 
-// https://docs.unity3d.com/ScriptReference/Mesh.html
-// Cuts the victim GameObject v with the cutting plane cutPlane,
-// Keeps the triangle that is under the cutting plane.
+	// https://docs.unity3d.com/ScriptReference/Mesh.html
+	// Cuts the victim GameObject v with the cutting plane cutPlane,
+	// Keeps the triangle that is under the cutting plane.
 	void Cut(GameObject v, GameObject cutPlane)
 	{
 		// get the mesh data from GameObject v
@@ -179,7 +179,7 @@ public class CutObject : MonoBehaviour
 		List<Vector3> newVertices = new List<Vector3>(vertices);
 		List<Vector3> newNormals = new List<Vector3>(normals);
 
-		edges = new int[ vertices.Length * 2 ] {-1};	// two times the count would be enough
+		edges = new int[ vertices.Length * 2 ];	// two times the count would be enough
 
 		for(int i = 0, cp = 0, code = 0; i < triangles.Length; )
 		{
@@ -205,33 +205,33 @@ public class CutObject : MonoBehaviour
 			}
 		}
 
-        int[] rightIndex = new int[vertices.Length * 2];
-        for (int i = 0; i < rightIndex.Length; i++)
-            rightIndex[i] = -1;
+		int[] rightIndex = new int[vertices.Length * 2];
+		for (int i = 0; i < rightIndex.Length; i++)
+		rightIndex[i] = -1;
 
-        List<int> newTriangles = new List<int>();
+		List<int> newTriangles = new List<int>();
 		for(var i = 0; i < triangles.Length; i+=3)
 		{
 			if(pointCount[i] == 0 )
-				AddTriangle(triangles, i, newTriangles);
+			AddTriangle(triangles, i, newTriangles);
 			// process the triangle with one point below the plane.
 			else if(pointCount[i+1] == 1)
-				ProcessTriangleB1(triangles, i, pointCount, vertices, normals, p, n, sides, hasMovedTo, newTriangles, newVertices, newNormals,rightIndex);
+			ProcessTriangleB1(triangles, i, pointCount, vertices, normals, p, n, sides, hasMovedTo, newTriangles, newVertices, newNormals,rightIndex);
 		}
 
 		for(var i = 0; i < triangles.Length; i+=3)
 		{
 			if(pointCount[i+1] == 2)
-				ProcessTriangleB2(triangles, i, pointCount, vertices, normals, p, n, sides, hasMovedTo, newTriangles, newVertices, newNormals,rightIndex);
+			ProcessTriangleB2(triangles, i, pointCount, vertices, normals, p, n, sides, hasMovedTo, newTriangles, newVertices, newNormals,rightIndex);
 		}
 
-        int futa1, futa2, futa3;
+		int futa1, futa2, futa3;
 
 		futa1 = -1;
-        for(int i = 0; i < newVertices.Count; i++)
-        {
-            if (rightIndex[i] != -1)
-            {
+		for(int i = 0; i < newVertices.Count; i++)
+		{
+			if (rightIndex[i] != -1)
+			{
 				if( futa1 == -1 )
 				{
 					futa1 = i;
@@ -245,27 +245,27 @@ public class CutObject : MonoBehaviour
 					if( futa3 == -1 )
 						continue;
 
-                    newTriangles.Add(futa1);
-                    newTriangles.Add(futa2);
-                    newTriangles.Add(futa3);
+					newTriangles.Add(futa1);
+					newTriangles.Add(futa2);
+					newTriangles.Add(futa3);
 
 					Debug.Log(futa1 + " - " + futa2 + " - " + futa3);
 					Debug.Log(newTriangles.Count);
-                    Debug.Log("---");
+					Debug.Log("---");
 				}
-            }
-        }
-        // https://stackoverflow.com/questions/1367504/converting-listint-to-int
-        // update the triangle array
+			}
+		}
+		// https://stackoverflow.com/questions/1367504/converting-listint-to-int
+		// update the triangle array
 		foreach(int i in newTriangles)
 			if( i<0 || i>=newTriangles.Count)
 				Debug.Log("ERROR "+i);
 
 		mesh.Clear();
-        mesh.vertices = newVertices.ToArray();
+		mesh.vertices = newVertices.ToArray();
 		mesh.normals = newNormals.ToArray();
 		mesh.triangles = newTriangles.ToArray();
 
-		delete(edges);
+		// delete(edges); なんと C# では delete しなくてもそのうち返却してくれるらしい
 	}
 }
