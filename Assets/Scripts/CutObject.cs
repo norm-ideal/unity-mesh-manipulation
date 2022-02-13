@@ -44,7 +44,9 @@ public class CutObject : MonoBehaviour
 	// vertices, normals : 頂点データリスト
 	// p, n : 切断平面
 	// sides : 各頂点が平面のどちら側にあるか（どうやら使っていない）
-	// hasMovedTo : 頂点インデックスがすでに切断によって移動されている場合の移動先頂点インデックス。すでに移動されているなら、新しく頂点を生成せず、移動先の頂点を参照する。
+	// hasMovedTo : 頂点インデックスの点がすでに切断によって移動予約されている場合の、移動先頂点インデックス。
+	// 　すでに自分以外の頂点に向かって移動されているならば、（その頂点インデックスに対応する点はもはや他のメッシュの持ち物なので）
+	// 　新しく自分に向かって移動させた頂点を生成する。
 	// newVertices, newNormals : 新しく生成される頂点の情報
 	// rightIndex : 「自分の右側の頂点」を表す頂点インデックスリスト。切断によって生成された頂点から「蓋」を作るために使う。
 	private void ProcessTriangleB1(int[] triangles, int ti, int[] pointCount, Vector3[] vertices, Vector3[] normals, Vector3 p, Vector3 n, int[] sides, int[] hasMovedTo, List<int> newTriangles, List<Vector3> newVertices, List<Vector3> newNormals,int[] rightIndex)
